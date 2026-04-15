@@ -1,0 +1,107 @@
+<main class="app-shell">
+  <section class="hero-panel">
+    <div class="hero-copy">
+      <p class="eyebrow">Open-Meteo dashboard</p>
+      <h1>Meteo corrente e previsione breve per piu citta</h1>
+      <p class="intro">
+        Inserisci una o piu citta separate da virgole. L'app recupera coordinate, meteo corrente,
+        metriche aggiuntive e una previsione di 5 giorni per ogni risultato valido.
+      </p>
+    </div>
+
+    <form class="search-form" (ngSubmit)="searchWeather()">
+      <label class="field-label" for="cityInput">Citta</label>
+      <div class="input-row">
+        <input
+          id="cityInput"
+          name="cityInput"
+          type="text"
+          [(ngModel)]="cityInput"
+          placeholder="Per esempio Roma, Milano, Napoli"
+          [disabled]="isLoading()"
+        />
+        <button type="submit" [disabled]="isLoading()">
+          {{ isLoading() ? 'Aggiorno...' : 'Cerca meteo' }}
+        </button>
+      </div>
+      <p class="field-hint">Usa una virgola per cercare piu citta nello stesso invio.</p>
+    </form>
+
+    @if (formErrorMessage()) {
+      <p class="message error">{{ formErrorMessage() }}</p>
+    }
+  </section>
+
+  @if (results().length) {
+    <section class="results-grid">
+      @for (result of results(); track trackByCity($index, result)) {
+        <article class="result-card" [class.result-card-error]="!result.weather">
+          <div class="card-header">
+            <div>
+              <p class="result-label">Citta</p>
+              <h2>{{ result.city }}</h2>
+            </div>
+
+            @if (result.weather) {
+              <p class="temperature">{{ result.weather.temperatureCelsius }} °C</p>
+            }
+          </div>
+
+          @if (result.weather; as weather) {
+            <p class="description">{{ weather.weatherDescription }}</p>
+
+            <section class="metrics-grid" aria-label="Current weather metrics">
+              <div class="metric-card">
+                <span class="metric-label">Umidita</span>
+                <strong>
+                  {{ weather.relativeHumidity ?? 'N/A' }}
+                  @if (weather.relativeHumidity !== null) {<span>%</span>}
+                </strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Vento</span>
+                <strong>
+                  {{ weather.windSpeed ?? 'N/A' }}
+                  @if (weather.windSpeed !== null) {<span> km/h</span>}
+                </strong>
+              </div>
+              <div class="metric-card">
+                <span class="metric-label">Pioggia</span>
+                <strong>
+                  {{ weather.precipitation ?? 'N/A' }}
+                  @if (weather.precipitation !== null) {<span> mm</span>}
+                </strong>
+              </div>
+            </section>
+
+            <section class="forecast-panel">
+              <div class="forecast-header">
+                <p class="result-label">Previsione</p>
+                <span class="forecast-caption">Prossimi 5 giorni</span>
+              </div>
+
+              <div class="forecast-list">
+                @for (day of weather.forecast; track day.date) {
+                  <div class="forecast-item">
+                    <span class="forecast-date">{{ day.date }}</span>
+                    <span class="forecast-range">
+                      <strong>{{ day.maxTemperatureCelsius ?? 'N/A' }} °</strong>
+                      <span>{{ day.minTemperatureCelsius ?? 'N/A' }} °</span>
+                    </span>
+                  </div>
+                }
+              </div>
+            </section>
+          } @else {
+            <p class="message error city-error">{{ result.errorMessage }}</p>
+          }
+        </article>
+      }
+    </section>
+  } @else {
+    <section class="empty-state">
+      <p class="empty-title">Nessun risultato ancora</p>
+      <p class="empty-copy">Cerca una citta per vedere meteo corrente, metriche extra e previsione multi-giorno.</p>
+    </section>
+  }
+</main>
